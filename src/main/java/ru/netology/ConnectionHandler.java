@@ -1,9 +1,6 @@
 package ru.netology;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 public class ConnectionHandler implements Runnable {
@@ -20,8 +17,11 @@ public class ConnectionHandler implements Runnable {
 
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
-                System.out.println("Сервер получил: " + inputLine);
-                out.println("Эхо: " + inputLine);
+                if (inputLine.startsWith("GET")) {
+                    String filePath = inputLine.split(" ")[1];
+                    handleClientRequest(filePath, out);
+                } else {
+                }
             }
         } catch (IOException e) {
             System.out.println("Ошибка при обработке подключения: " + e.getMessage());
@@ -31,6 +31,22 @@ public class ConnectionHandler implements Runnable {
             } catch (IOException e) {
                 System.out.println("Ошибка при закрытии подключения: " + e.getMessage());
             }
+        }
+    }
+
+    private void handleClientRequest(String filePath, PrintWriter out) {
+        File file = new File(filePath);
+        if (file.exists() && !file.isDirectory()) {
+            try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = fileReader.readLine()) != null) {
+                    out.println(line);
+                }
+            } catch (IOException e) {
+                System.out.println("Ошибка при чтении файла: " + e.getMessage());
+            }
+        } else {
+            out.println("Файл не найден");
         }
     }
 }
